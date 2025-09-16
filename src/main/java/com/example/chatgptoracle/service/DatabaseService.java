@@ -1,14 +1,12 @@
 package com.example.chatgptoracle.service;
 
-import com.example.chatgptoracle.model.Cliente;
-import com.example.chatgptoracle.model.Faturas;
-import com.example.chatgptoracle.model.Pedido;
-import com.example.chatgptoracle.model.Produto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DatabaseService {
@@ -16,72 +14,38 @@ public class DatabaseService {
     @PersistenceContext
     private EntityManager em;
 
-    // Consulta todos os produtos
-    public List<Produto> getProdutos() {
-        return em.createQuery("SELECT p FROM Produto p", Produto.class)
-                .getResultList();
-    }
+    /**
+     * Executa SQL genérico e retorna lista de maps
+     */
+    public List<Map<String, Object>> queryGenerica(String sql, Map<String, Object> params) {
+        Query q = em.createNativeQuery(sql, Tuple.class);
 
-    // Consulta todos os clientes
-    public List<Cliente> getClientes() {
-        return em.createQuery("SELECT c FROM Cliente c", Cliente.class)
-                .getResultList();
-    }
-
-    // Consulta todos os pedidos
-    public List<Pedido> getPedidos() {
-        return em.createQuery("SELECT p FROM Pedido p", Pedido.class)
-                .getResultList();
-    }
-
-    // Busca cliente por nome (retorna null se não encontrar)
-    public Cliente findClienteByNome(String nome) {
-        List<Cliente> result = em.createQuery("SELECT c FROM Cliente c WHERE c.nome = :nome", Cliente.class)
-                .setParameter("nome", nome)
-                .getResultList();
-        return result.isEmpty() ? null : result.get(0);
-    }
-
-    // Busca produto por nome (retorna null se não encontrar)
-    public Produto findProdutoByNome(String nome) {
-        List<Produto> result = em.createQuery("SELECT p FROM Produto p WHERE p.nome = :nome", Produto.class)
-                .setParameter("nome", nome)
-                .getResultList();
-        return result.isEmpty() ? null : result.get(0);
-    }
-
-    // Consulta pedidos por cliente (usando ID direto)
-    public List<Pedido> getPedidosByCliente(Long clienteId) {
-        return em.createQuery("SELECT p FROM Pedido p WHERE p.idCliente = :cid", Pedido.class)
-                .setParameter("cid", clienteId)
-                .getResultList();
-    }
-
-    // Consulta pedidos por produto (usando ID direto)
-    public List<Pedido> getPedidosByProduto(Long produtoId) {
-        return em.createQuery("SELECT p FROM Pedido p WHERE p.idProduto = :pid", Pedido.class)
-                .setParameter("pid", produtoId)
-                .getResultList();
-    }
-
-    public Integer getQuantidadeProdutosByClienteNome(String nomeCliente) {
-        Cliente cliente = findClienteByNome(nomeCliente);
-        if (cliente == null) {
-            return null; // ou lançar exceção / retornar 0
+        if (params != null) {
+            params.forEach(q::setParameter);
         }
 
-        Long total = em.createQuery(
-                        "SELECT SUM(p.quantidade) FROM Pedido p WHERE p.idCliente = :cid", Long.class)
-                .setParameter("cid", cliente.getIdCliente())
-                .getSingleResult();
+        List<Tuple> tuples = q.getResultList();
+        List<Map<String, Object>> result = new ArrayList<>();
 
-        return total != null ? total.intValue() : 0;
+        for (Tuple tuple : tuples) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            for (int i = 0; i < tuple.getElements().size(); i++) {
+                String alias = tuple.getElements().get(i).getAlias();
+                if (alias == null) {
+                    alias = "col_" + i; // fallback se não tiver alias
+                }
+                row.put(alias, tuple.get(i));
+            }
+            result.add(row);
+        }
+
+        return result;
     }
 
-    // Consulta todos os pedidos
-    public List<Faturas> getFaturas() {
-        return em.createQuery("SELECT p FROM Faturas p", Faturas.class)
-                .getResultList();
+    /**
+     * Versão sem parâmetros
+     */
+    public List<Map<String, Object>> queryGenerica(String sql) {
+        return queryGenerica(sql, Collections.emptyMap());
     }
-
 }
