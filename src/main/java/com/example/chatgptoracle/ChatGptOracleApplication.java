@@ -1,0 +1,11 @@
+package com.example.chatgptoracle;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ChatGptOracleApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ChatGptOracleApplication.class, args);
+    }
+}
