@@ -126,7 +126,7 @@ public class ChatGptService {
         Map<String, Object> body = Map.of(
                 "model", "gpt-4.1-mini",
                 "messages", List.of(
-                        Map.of("role", "system", "content", "Você é um assistente que responde perguntas sobre dados do banco Oracle."),
+                        Map.of("role", "system", "content", "Você é um especialista em SQL.---Retorne as informações em HTML, utilizando listas, <strong>, <em> e tabelas quando necessário.---Você pode utilizar os componentes do Bootstrap na sua resposta, incluindo suas classes CSS.---Quando retornar uma <table> você deve utilizar nela as classes do Bootstrap: \"table table-striped table-bordered\".---Gere sempre respostas para pessoas, nunca responda com SQL (A não ser que o usuário peça especificamente por SQL)."),
                         Map.of("role", "user", "content",
                                 "Por favor, gere um objeto JSON válido para a função 'formatar_resposta' com a chave 'resposta'. " +
                                         "Pergunta: " + question + "\nDados: " + jsonDados)
